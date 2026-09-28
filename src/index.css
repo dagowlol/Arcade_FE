@@ -1,0 +1,1133 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap');
+
+:root {
+  --font-arcade: 'Fredoka', 'Outfit', cursive, sans-serif;
+  --font-text: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --kfc-red: #E4002B;
+  --kfc-dark-red: #A3001E;
+  --arcade-yellow: #FFC72C;
+  --arcade-gold: #FFAA00;
+  --arcade-blue: #0088FF;
+  --arcade-dark-blue: #0055AA;
+  --arcade-green: #00C853;
+  --arcade-purple: #8E24AA;
+  --arcade-cabinet-bg: #1A1A24;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-arcade);
+  background: radial-gradient(circle at center, #2B1810 0%, #0F0906 100%);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  color: #333;
+  overflow-x: hidden;
+}
+
+.arcade-app-main {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================================================
+   ARCADE CABINET CHASSIS
+========================================================= */
+.arcade-cabinet-wrapper {
+  width: 100%;
+  max-width: 540px; /* Arcade Portrait Kiosk Ratio */
+  min-height: 920px;
+  background: linear-gradient(180deg, #3A1010 0%, #1E0808 100%);
+  border-radius: 36px;
+  padding: 16px 14px 20px;
+  box-shadow: 
+    0 0 0 6px #5C1D1D,
+    0 0 0 12px #260A0A,
+    0 24px 60px rgba(0, 0, 0, 0.8),
+    inset 0 2px 10px rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 4px solid #FF5252;
+}
+
+/* Marquee Header */
+.arcade-marquee {
+  background: linear-gradient(180deg, var(--kfc-red) 0%, var(--kfc-dark-red) 100%);
+  border-radius: 24px;
+  padding: 12px 16px;
+  text-align: center;
+  margin-bottom: 12px;
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.4), 0 6px 16px rgba(228, 0, 43, 0.5);
+  border: 3px solid var(--arcade-yellow);
+  position: relative;
+  overflow: hidden;
+}
+
+.marquee-bulb-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.arcade-bulb {
+  width: 10px;
+  height: 10px;
+  background: #FFF9C4;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #FFEE58;
+  animation: bulbFlicker 1.2s infinite alternate;
+}
+
+@keyframes bulbFlicker {
+  0% { opacity: 0.4; filter: brightness(0.7); }
+  100% { opacity: 1; filter: brightness(1.5); box-shadow: 0 0 12px #FFEE58; }
+}
+
+.marquee-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  background: #FFF;
+  color: var(--kfc-red);
+  padding: 2px 10px;
+  border-radius: 12px;
+  letter-spacing: 1px;
+}
+
+.marquee-logo {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #FFF;
+  text-shadow: 2px 2px 0px #000, 0 0 14px rgba(255, 199, 44, 0.8);
+  margin: 2px 0;
+  letter-spacing: 0.5px;
+}
+
+.marquee-sub {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--arcade-yellow);
+  letter-spacing: 1.5px;
+}
+
+/* Screen Bezel & Display */
+.arcade-screen-bezel {
+  background: #111;
+  border-radius: 24px;
+  padding: 10px;
+  box-shadow: inset 0 4px 14px rgba(0, 0, 0, 0.9);
+  flex-grow: 1;
+  display: flex;
+}
+
+.arcade-screen-inner {
+  background: #FFF9F0;
+  border-radius: 18px;
+  width: 100%;
+  min-height: 720px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Base Screen Layout */
+.screen-layout {
+  padding: 20px 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  flex-grow: 1;
+  text-align: center;
+}
+
+/* KFC Brand Badge */
+.kfc-badge, .kfc-top-logo {
+  background: var(--kfc-red);
+  color: white;
+  font-weight: 900;
+  font-size: 1.1rem;
+  padding: 4px 14px;
+  border-radius: 8px;
+  border: 2px solid white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+/* Chunky 3D Arcade Buttons */
+.btn-arcade-huge {
+  width: 100%;
+  max-width: 380px;
+  padding: 18px 24px;
+  font-family: var(--font-arcade);
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: white;
+  background: linear-gradient(180deg, #FF334B 0%, var(--kfc-red) 50%, var(--kfc-dark-red) 100%);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 
+    0 8px 0 #7A0016,
+    0 14px 24px rgba(228, 0, 43, 0.5),
+    inset 0 3px 6px rgba(255, 255, 255, 0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-arcade-huge:active {
+  transform: translateY(6px);
+  box-shadow: 
+    0 2px 0 #7A0016,
+    0 6px 12px rgba(228, 0, 43, 0.4);
+}
+
+/* =========================================================
+   SCREEN 1: ATTRACT
+========================================================= */
+.screen-attract {
+  background: linear-gradient(180deg, #FFE8E8 0%, #FFF5E6 100%);
+  justify-content: space-around;
+}
+
+.attract-hero-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--kfc-red);
+  text-shadow: 2px 2px 0px #FFC72C;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.attract-tagline {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #795548;
+}
+
+.hero-chick {
+  font-size: 7.5rem;
+  display: inline-block;
+  animation: heroBounce 1.8s infinite ease-in-out alternate;
+  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.15));
+}
+
+@keyframes heroBounce {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-12px) scale(1.05); }
+}
+
+.hero-speech-bubble {
+  background: white;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--kfc-red);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 3px solid var(--arcade-yellow);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+  margin-top: 10px;
+}
+
+.attract-rewards-ribbon {
+  background: var(--kfc-red);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 16px;
+  border: 2px solid var(--arcade-yellow);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+.ribbon-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--arcade-yellow);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ribbon-items {
+  font-size: 1rem;
+  font-weight: 800;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* =========================================================
+   SCREEN 2: WELCOME
+========================================================= */
+.screen-welcome {
+  background: #FFFDF9;
+  justify-content: space-around;
+}
+
+.welcome-headline {
+  font-size: 2.3rem;
+  font-weight: 900;
+  color: var(--kfc-red);
+}
+
+.welcome-reward-tip {
+  background: #FFF8E1;
+  border: 2px solid var(--arcade-yellow);
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #7A5200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* =========================================================
+   SCREEN 3: CHOOSE CHALLENGE
+========================================================= */
+.screen-choose-challenge {
+  background: #FFFDF9;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.arcade-screen-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--kfc-red);
+}
+
+.challenge-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.challenge-card {
+  background: white;
+  border-radius: 16px;
+  padding: 10px 6px;
+  border: 3px solid #DDD;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.challenge-card:hover {
+  transform: translateY(-4px);
+}
+
+.card-num-badge {
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.badge-green { background: #00C853; }
+.badge-yellow { background: #FFAA00; }
+.badge-blue { background: #0088FF; }
+.badge-red { background: #E4002B; }
+
+.card-sub-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #666;
+  margin: 4px 0;
+  min-height: 24px;
+}
+
+.card-food-icon {
+  font-size: 2.2rem;
+  margin: 4px 0;
+}
+
+.card-xp-tag {
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.tag-green { background: #E8F5E9; color: #2E7D32; }
+.tag-yellow { background: #FFF8E1; color: #F57F17; }
+.tag-blue { background: #E1F5FE; color: #0277BD; }
+.tag-red { background: #FFEBEE; color: #C62828; }
+
+.card-diff-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #888;
+  margin-top: 4px;
+}
+
+.boss-challenge-banner {
+  width: 100%;
+  background: linear-gradient(135deg, #212121 0%, #424242 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 2px solid #FFD54F;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
+.boss-badge {
+  background: #FFD54F;
+  color: #000;
+  font-weight: 900;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.boss-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.boss-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.boss-xp {
+  font-size: 0.85rem;
+  color: #FFD54F;
+  font-weight: 800;
+}
+
+.btn-arcade-start-all {
+  width: 100%;
+  padding: 16px;
+  font-family: var(--font-arcade);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: white;
+  background: linear-gradient(180deg, #00E676 0%, #00C853 100%);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #007E33, 0 10px 20px rgba(0, 200, 83, 0.4);
+}
+
+.btn-arcade-start-all:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #007E33;
+}
+
+/* =========================================================
+   STAGE HUD & COMMON CHALLENGE CONTROLS
+========================================================= */
+.screen-game-stage, .screen-boss-stage {
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.stage-top-hud {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.hud-badge {
+  font-size: 1.1rem;
+  font-weight: 900;
+  padding: 6px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.hud-step {
+  background: #E0E0E0;
+  color: #333;
+}
+
+.hud-xp {
+  background: var(--arcade-yellow);
+  color: #5D4037;
+}
+
+.stage-question-card {
+  background: white;
+  border: 3px solid #FFD54F;
+  border-radius: 20px;
+  padding: 12px 24px;
+  width: 100%;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+}
+
+.question-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #212121;
+}
+
+/* Stage 1 Center Visual */
+.hero-food-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 24px;
+  border: 4px solid #FFE082;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+}
+
+.big-food-emoji {
+  font-size: 6.5rem;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.15));
+}
+
+.food-name-reveal {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--kfc-red);
+  margin-top: 6px;
+}
+
+/* Stage 2 Food Prices Grid */
+.stage-food-prices-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.price-card {
+  background: white;
+  border: 3px solid #E0E0E0;
+  border-radius: 16px;
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+  transition: transform 0.15s;
+}
+
+.price-card:hover {
+  transform: translateY(-4px);
+}
+
+.price-card.selected-target {
+  border-color: #00C853;
+  background: #E8F5E9;
+}
+
+.price-card-icon {
+  font-size: 2.5rem;
+}
+
+.price-card-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.price-card-val {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: var(--kfc-red);
+  background: #FFEBEE;
+  padding: 2px 6px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+/* Stage 3 Listening Hero & Options */
+.stage-listen-hero {
+  background: linear-gradient(135deg, #0091EA 0%, #0064B0 100%);
+  color: white;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 8px 20px rgba(0, 145, 234, 0.4);
+  cursor: pointer;
+  border: 3px solid #81D4FA;
+}
+
+.stage-listen-hero.playing {
+  animation: listenPulse 1s infinite alternate;
+}
+
+@keyframes listenPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03); filter: brightness(1.2); }
+}
+
+.speaker-big-icon {
+  font-size: 2.2rem;
+}
+
+.listen-hero-text {
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.stage-options-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-quiz-option {
+  width: 100%;
+  background: white;
+  border: 3px solid #E0E0E0;
+  border-radius: 16px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  font-family: var(--font-arcade);
+  font-size: 1.25rem;
+  font-weight: 800;
+  transition: all 0.15s;
+}
+
+.btn-quiz-option:hover {
+  border-color: #0091EA;
+  background: #E1F5FE;
+  transform: translateX(4px);
+}
+
+.opt-letter {
+  font-weight: 900;
+  color: #0091EA;
+  font-size: 1.3rem;
+}
+
+/* Stage 4 & 5 Speaking Sentence */
+.stage-sentence-card {
+  background: white;
+  border: 3px solid #FFE082;
+  border-radius: 20px;
+  padding: 18px 20px;
+  width: 100%;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  cursor: pointer;
+}
+
+.audio-mini-trigger {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #E65100;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.sentence-text {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #1A237E;
+  line-height: 1.4;
+}
+
+/* Countdown Timer */
+.timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #212121;
+  color: white;
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-size: 1.25rem;
+  font-weight: 900;
+  border: 2px solid #757575;
+}
+
+.timer-digits {
+  color: #00E676;
+  font-family: monospace;
+}
+
+.timer-urgent .timer-digits {
+  color: #FF1744;
+  animation: urgentPulse 0.5s infinite alternate;
+}
+
+@keyframes urgentPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.15); }
+}
+
+/* =========================================================
+   BIG BLUE MIC BUTTON (Chunkey Arcade Touch)
+========================================================= */
+.stage-speech-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-arcade-mic {
+  width: 100%;
+  max-width: 320px;
+  padding: 16px 24px;
+  font-family: var(--font-arcade);
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: white;
+  background: linear-gradient(180deg, #29B6F6 0%, #0288D1 100%);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 8px 0 #01579B, 0 12px 24px rgba(2, 136, 209, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-arcade-mic.listening {
+  background: linear-gradient(180deg, #00E676 0%, #00C853 100%);
+  box-shadow: 0 8px 0 #007E33, 0 0 20px rgba(0, 230, 118, 0.7);
+  animation: micListenPulse 0.8s infinite alternate;
+}
+
+@keyframes micListenPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.04); }
+}
+
+.btn-arcade-mic:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 #01579B;
+}
+
+.btn-boss-mic {
+  background: linear-gradient(180deg, #FF5252 0%, #D50000 100%);
+  box-shadow: 0 8px 0 #8B0000, 0 12px 24px rgba(213, 0, 0, 0.4);
+}
+
+.transcript-pill {
+  background: #EDE7F6;
+  color: #4527A0;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 6px 16px;
+  border-radius: 12px;
+}
+
+.toast-message {
+  padding: 8px 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.toast-message.success {
+  background: #E8F5E9;
+  color: #2E7D32;
+  border: 2px solid #A5D6A7;
+}
+
+.toast-message.retry {
+  background: #FFF3E0;
+  color: #E65100;
+  border: 2px solid #FFCC80;
+}
+
+/* =========================================================
+   STAGE 5: BOSS CHALLENGE
+========================================================= */
+.screen-boss-stage {
+  background: linear-gradient(180deg, #FFEBEE 0%, #FFFDE7 100%);
+}
+
+.boss-header-banner {
+  background: linear-gradient(135deg, #D50000 0%, #B71C1C 100%);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 3px solid #FFD54F;
+  box-shadow: 0 6px 16px rgba(213, 0, 0, 0.4);
+}
+
+.crown-icon { font-size: 2rem; }
+.boss-header-banner h2 { font-size: 1.6rem; font-weight: 900; }
+
+.boss-sub-instruction {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #C62828;
+}
+
+.boss-sentence-box {
+  border-color: #FF5252;
+}
+
+/* =========================================================
+   SCREEN 9: SCORE SCREEN
+========================================================= */
+.screen-score {
+  background: #FFFDF9;
+  justify-content: space-between;
+}
+
+.score-top-ribbon {
+  background: var(--kfc-red);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 18px;
+  font-size: 1.3rem;
+  font-weight: 900;
+  border: 3px solid var(--arcade-yellow);
+}
+
+.score-total-card {
+  background: #FFF8E1;
+  border: 3px solid var(--arcade-yellow);
+  border-radius: 20px;
+  padding: 14px 28px;
+}
+
+.score-label {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #795548;
+}
+
+.score-number-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.score-star { font-size: 2.2rem; }
+.score-value { font-size: 2.4rem; font-weight: 900; color: #E65100; }
+
+.score-breakdown-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: white;
+  border-radius: 18px;
+  padding: 14px;
+  border: 2px solid #E0E0E0;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #FAFAFA;
+  font-size: 0.95rem;
+}
+
+.row-label { font-weight: 800; color: #424242; }
+.row-val { font-weight: 900; color: #00C853; }
+
+/* =========================================================
+   SCREEN 10: REWARD SHOP
+========================================================= */
+.screen-reward-shop {
+  background: #FFFDF9;
+  justify-content: space-between;
+}
+
+.shop-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--kfc-red);
+}
+
+.shop-xp-bar-box {
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  padding: 12px 18px;
+  border: 2px solid var(--arcade-yellow);
+}
+
+.xp-bar-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 900;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.xp-label-num { color: #00C853; }
+
+.xp-progress-track {
+  height: 14px;
+  background: #E0E0E0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.xp-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00E676 0%, #00C853 100%);
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.rewards-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.reward-voucher-card {
+  background: white;
+  border: 3px solid #E0E0E0;
+  border-radius: 18px;
+  padding: 14px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.reward-voucher-card.unlocked {
+  border-color: #00C853;
+  background: #F1F8E9;
+  transform: scale(1.02);
+}
+
+.voucher-xp-tag {
+  font-size: 0.8rem;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.tag-unlocked { background: #00C853; color: white; }
+.tag-locked { background: #E0E0E0; color: #616161; }
+
+.voucher-food-icon { font-size: 3.2rem; margin: 8px 0; }
+.voucher-name { font-size: 1.1rem; font-weight: 900; color: #212121; }
+
+.btn-voucher-status {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-family: var(--font-arcade);
+  font-weight: 900;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 8px;
+  background: #00C853;
+  color: white;
+  cursor: pointer;
+}
+
+.voucher-locked-note {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #757575;
+}
+
+.today-stock-bar {
+  background: #EEEEEE;
+  padding: 8px 16px;
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #616161;
+}
+
+/* =========================================================
+   SCREEN 11: CLAIM REWARD
+========================================================= */
+.screen-claim-reward {
+  background: #FFFDF9;
+  justify-content: space-around;
+}
+
+.claim-won-title {
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: var(--kfc-red);
+  text-shadow: 2px 2px 0px #FFC72C;
+}
+
+.claim-prize-card {
+  background: #FFF8E1;
+  border: 4px solid var(--arcade-yellow);
+  border-radius: 24px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.1);
+}
+
+.prize-icon-large { font-size: 5.5rem; }
+.prize-name-text { font-size: 1.8rem; font-weight: 900; color: #E65100; margin: 8px 0; }
+.prize-instruction { font-size: 0.95rem; font-weight: 700; color: #795548; margin-bottom: 14px; }
+
+.qr-code-box {
+  background: white;
+  border: 2px dashed #FFA000;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.qr-icon { font-size: 2rem; display: block; }
+.qr-code-str { font-size: 1.1rem; font-weight: 900; color: #333; font-family: monospace; }
+
+/* =========================================================
+   SCREEN 12: END SCREEN
+========================================================= */
+.screen-end {
+  background: #FFFDF9;
+  justify-content: space-around;
+}
+
+.end-title { font-size: 2.6rem; font-weight: 900; color: var(--kfc-red); }
+.end-subtitle { font-size: 1.3rem; font-weight: 800; color: #616161; }
+
+.end-buttons-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  align-items: center;
+}
+
+.btn-exit-cabinet {
+  background: linear-gradient(180deg, #757575 0%, #424242 100%);
+  box-shadow: 0 8px 0 #212121;
+}
+
+/* =========================================================
+   MASCOT COMPONENT STYLING
+========================================================= */
+.arcade-mascot-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.mascot-avatar-circle {
+  width: 64px;
+  height: 64px;
+  background: #FFE082;
+  border-radius: 50%;
+  border: 3px solid var(--kfc-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.mascot-avatar-img {
+  font-size: 2.6rem;
+}
+
+.mascot-cap {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 1.2rem;
+}
+
+.mascot-speech-bubble {
+  background: white;
+  border: 2px solid var(--kfc-red);
+  border-radius: 16px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #212121;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  position: relative;
+  text-align: left;
+}
+
+/* =========================================================
+   ARCADE CABINET FOOTER
+========================================================= */
+.arcade-cabinet-footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #FFF;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0 8px;
+}
+
+.footer-speakers {
+  display: flex;
+  gap: 4px;
+}
+
+.speaker-grill {
+  width: 16px;
+  height: 4px;
+  background: #555;
+  border-radius: 2px;
+}
+
+.footer-brand {
+  color: #AAA;
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+}
+
+.coin-slot-light {
+  background: #FFD54F;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 900;
+  font-size: 0.7rem;
+  box-shadow: 0 0 8px #FFD54F;
+}
