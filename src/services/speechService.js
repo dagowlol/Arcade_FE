@@ -107,9 +107,17 @@ export class SpeechService {
   }
 
   /**
-   * Recognizes speech from microphone using Azure Speech SDK
+   * Recognizes speech from microphone using Azure Speech SDK.
+   *
+   * The transcript is delivered EXACTLY ONCE through the returned promise
+   * (resolves to '' when nothing usable was captured). It is deliberately NOT
+   * also pushed through an `onRecognized` callback: callers that handled both
+   * channels would submit the same answer twice, advancing the challenge twice
+   * and inflating the score.
+   *
+   * `onStart` / `onError` remain callbacks for immediate UI feedback.
    */
-  static async recognizeSpeech({ onRecognized, onError, onStart }) {
+  static async recognizeSpeech({ onError, onStart } = {}) {
     if (onStart) onStart();
 
     if (AZURE_KEY && AZURE_REGION) {
@@ -124,19 +132,15 @@ export class SpeechService {
             (result) => {
               recognizer.close();
               if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-                const text = result.text.replace(/[.,!?;:]/g, '').trim();
-                if (onRecognized) onRecognized(text);
-                resolve(text);
-              } else if (result.reason === SpeechSDK.ResultReason.NoMatch) {
-                SpeechService.recognizeWithWebSpeech({ onRecognized, onError }).then(resolve);
+                resolve(result.text.replace(/[.,!?;:]/g, '').trim());
               } else {
-                SpeechService.recognizeWithWebSpeech({ onRecognized, onError }).then(resolve);
+                SpeechService.recognizeWithWebSpeech({ onError }).then(resolve);
               }
             },
             (err) => {
               recognizer.close();
               console.warn('Azure Speech error, using fallback:', err);
-              SpeechService.recognizeWithWebSpeech({ onRecognized, onError }).then(resolve);
+              SpeechService.recognizeWithWebSpeech({ onError }).then(resolve);
             }
           );
         });
@@ -145,10 +149,10 @@ export class SpeechService {
       }
     }
 
-    return SpeechService.recognizeWithWebSpeech({ onRecognized, onError });
+    return SpeechService.recognizeWithWebSpeech({ onError });
   }
 
-  static recognizeWithWebSpeech({ onRecognized, onError }) {
+  static recognizeWithWebSpeech({ onError } = {}) {
     return new Promise((resolve) => {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
@@ -164,9 +168,7 @@ export class SpeechService {
         recognition.maxAlternatives = 1;
 
         recognition.onresult = (event) => {
-          const spokenText = event.results[0][0].transcript;
-          if (onRecognized) onRecognized(spokenText);
-          resolve(spokenText);
+          resolve(event.results[0][0].transcript);
         };
 
         recognition.onerror = (event) => {

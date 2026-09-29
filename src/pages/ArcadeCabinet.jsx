@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { foodChallengeApi } from '../services/foodChallengeApi';
 import { SpeechService } from '../services/speechService';
 import { sounds } from '../services/soundEffects';
@@ -12,9 +12,16 @@ import FeedbackOverlay from '../components/FeedbackOverlay';
 import HeartDisplay from '../components/HeartDisplay';
 import ChallengeProgress from '../components/ChallengeProgress';
 import confetti from 'canvas-confetti';
+import mascotImage from '../assets/mascot.png';
+
+const LEVEL_BADGES = {
+  EASY: { className: 'level-badge-easy', text: 'Cấp độ 1 — Bé học Từ Vựng' },
+  MEDIUM: { className: 'level-badge-medium', text: '🔤 Cấp độ 2 — Xếp Từ & Điền Từ' },
+  HARD: { className: 'level-badge-hard', text: '⭐ Cấp độ 3 — Nhớ & Gọi món' },
+};
 
 export default function ArcadeCabinet() {
-  // App screens: ATTRACT → WELCOME → LEVEL_SELECT → PLAYING → RESULT → END
+  // App screens: ATTRACT → LEVEL_SELECT → PLAYING → RESULT → END
   const [screen, setScreen] = useState('ATTRACT');
   const [session, setSession] = useState(null);
   const [currentChallenge, setCurrentChallenge] = useState(null);
@@ -42,11 +49,6 @@ export default function ArcadeCabinet() {
   // ========================
   const handleTapToPlay = () => {
     sounds.playPop();
-    setScreen('WELCOME');
-  };
-
-  const handleStartPlay = () => {
-    sounds.playPop();
     setScreen('LEVEL_SELECT');
   };
 
@@ -67,7 +69,7 @@ export default function ArcadeCabinet() {
     }
   };
 
-  const handleSubmitAnswer = async (selectedItems, spokenText = '') => {
+  const handleSubmitAnswer = async (selectedItems, spokenText = '', answerText = null) => {
     if (!session || !currentChallenge) return;
 
     setLoading(true);
@@ -76,7 +78,8 @@ export default function ArcadeCabinet() {
         session.sessionId,
         currentChallenge.challengeId,
         selectedItems,
-        spokenText
+        spokenText,
+        answerText
       );
 
       if (result.correct) {
@@ -126,10 +129,12 @@ export default function ArcadeCabinet() {
           setTimeout(() => setFeedback(null), 3000);
         }
       }
+      return result;
     } catch (err) {
       console.error('Submit error:', err);
       setFeedback({ type: 'error', message: 'Lỗi kết nối. Thử lại nhé!' });
       setTimeout(() => setFeedback(null), 2000);
+      return { correct: false };
     } finally {
       setLoading(false);
     }
@@ -220,7 +225,7 @@ export default function ArcadeCabinet() {
 
               <div className="attract-hero-scene">
                 <div className="attract-mascot-hero">
-                  <span className="hero-chick">🐥</span>
+                  <img className="hero-chick" src={mascotImage} alt="Mascot con gà" />
                   <div className="hero-speech-bubble">BẤM ĐỂ CHƠI NÀO! 🎟️</div>
                 </div>
               </div>
@@ -231,35 +236,14 @@ export default function ArcadeCabinet() {
               </button>
 
               <div className="attract-rewards-ribbon">
-                <span className="ribbon-label">CHƠI ĐỂ NHẬN QUÀ THẬT!</span>
-                <div className="ribbon-items">
-                  <span>🍗 Chicken</span>
-                  <span>+</span>
-                  <span>🍦 Ice Cream</span>
-                  <span>+</span>
-                  <span>🍟 Fries</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* WELCOME SCREEN */}
-          {screen === 'WELCOME' && (
-            <div className="screen-layout screen-welcome">
-              <div className="kfc-top-logo">KFC</div>
-              <h2 className="welcome-headline">Xin chào bạn nhỏ!</h2>
-
-              <div className="welcome-mascot-box">
-                <Mascot mood="excited" message="Hãy hoàn thành các thử thách để nhận thưởng nhé!" />
-              </div>
-
-              <button type="button" className="btn-arcade-huge btn-lets-play" onClick={handleStartPlay}>
-                <span>BẮT ĐẦU CHƠI!</span>
-              </button>
-
-              <div className="welcome-reward-tip">
-                <span className="tip-star">⭐</span>
-                <span>Hoàn thành càng nhiều thử thách, phần thưởng càng lớn!</span>
+                <span className="ribbon-label">CHƠI ĐỂ NHẬN NHỮNG PHIẾU GIẢM GIÁ MIỄN PHÍ !</span>
+                {/* <div className="ribbon-items">
+                  <span>5% </span>
+                  <span>,</span>
+                  <span>10%</span>
+                  <span>,</span>
+                  <span>20%</span>
+                </div> */}
               </div>
             </div>
           )}
@@ -272,6 +256,13 @@ export default function ArcadeCabinet() {
           {/* PLAYING SCREEN */}
           {screen === 'PLAYING' && session && currentChallenge && (
             <div className="screen-layout screen-game-stage">
+              {/* Level Badge Ribbon (above the challenge progress + hearts) */}
+              <div className="level1-header-ribbon">
+                <div className={`level-badge ${LEVEL_BADGES[session.level]?.className || 'level-badge-easy'}`}>
+                  <span>{LEVEL_BADGES[session.level]?.text || 'Cấp độ 1 — Bé học Từ Vựng'}</span>
+                </div>
+              </div>
+
               {/* HUD Bar */}
               <div className="stage-top-hud">
                 <ChallengeProgress

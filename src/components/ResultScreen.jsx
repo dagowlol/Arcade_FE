@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import Mascot from './Mascot';
 import { sounds } from '../services/soundEffects';
+import mascotImage from '../assets/mascot.png';
 
 /**
  * ResultScreen - Màn hình kết quả tổng kết sau khi hoàn thành hoặc kết thúc lượt chơi.
@@ -58,20 +59,39 @@ export default function ResultScreen({ result, onPlayAgain, onGoHome }) {
           <span className="stat-label">Thử thách</span>
         </div>
 
-        <div className="stat-card stat-coins">
+        {/* <div className="stat-card stat-coins">
           <span className="stat-icon">🪙</span>
           <span className="stat-value">+{result?.coinsEarned || 0}</span>
           <span className="stat-label">Xu nhận được</span>
-        </div>
+        </div> */}
       </div>
+
+      {/* Coupon reward (only when level is won) */}
+      {isPassed && (
+        <div className="result-coupon-card">
+          <div className="coupon-percent">
+            <span className="coupon-percent-value">-{result?.discountPercent ?? 0}%</span>
+            <span className="coupon-percent-label">GIẢM GIÁ</span>
+          </div>
+          <div className="coupon-divider"></div>
+          <div className="coupon-body">
+            <img className="coupon-mascot-img" src={mascotImage} alt="Mascot KFC" />
+            <div className="coupon-info">
+              <span className="coupon-title">{result?.rewardTitle || 'Phiếu ưu đãi'}</span>
+              <span className="coupon-code">Mã: {result?.rewardCode || ''}</span>
+              <span className="coupon-note">Dùng khi gọi món tại quầy nhé!</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="result-actions">
         <button type="button" className="btn-arcade-huge btn-play-again" onClick={onPlayAgain}>
-          <span>🔄 CHƠI LẠI</span>
+          <span>CHƠI LẠI</span>
         </button>
         <button type="button" className="btn-arcade-secondary btn-home" onClick={onGoHome}>
-          <span>🏠 VỀ TRANG CHỦ</span>
+          <span>VỀ TRANG CHỦ</span>
         </button>
       </div>
     </div>

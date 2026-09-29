@@ -17,7 +17,7 @@ export default function FeedbackOverlay({ type, message, expectedSpeech }) {
         </div>
 
         <h3 className="feedback-headline">
-          {isSuccess && 'ĐÚNG RỒI! GIỎI KHÁM PHÁ!'}
+          {isSuccess && 'ĐÚNG RỒI!'}
           {isRetry && 'CHƯA CHÍNH XÁC RỒI!'}
           {!isSuccess && !isRetry && 'CÓ LỖI XẢY RA!'}
         </h3>

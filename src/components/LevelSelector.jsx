@@ -16,10 +16,10 @@ const LEVELS = [
   {
     id: 'MEDIUM',
     number: 2,
-    icon: '🍔',
-    title: 'Nghe & Gọi món',
+    icon: '🔤',
+    title: 'Xếp Từ & Điền Từ',
     subtitle: 'Cấp độ 2',
-    description: 'Nghe yêu cầu → chọn món → nói bằng tiếng Anh',
+    description: 'Nghe câu → xếp từ, điền từ, tìm từ thừa',
     difficulty: 'Trung bình',
     color: '#FF9800',
     bgColor: '#FFF3E0',
@@ -62,7 +62,6 @@ export default function LevelSelector({ onSelectLevel, loading }) {
           >
             <div className="level-card-icon-wrap">
               <span className="level-card-icon">{level.icon}</span>
-              <span className="level-card-number">{level.number}</span>
             </div>
 
             <div className="level-card-info">

@@ -23,7 +23,7 @@ export const foodChallengeApi = {
     return res.json();
   },
 
-  async submitAnswer(sessionId, challengeId, selectedItems, spokenText) {
+  async submitAnswer(sessionId, challengeId, selectedItems, spokenText, answerText) {
     const res = await fetch(`${API_BASE}/${sessionId}/answer`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,6 +31,7 @@ export const foodChallengeApi = {
         challengeId,
         selectedItems,
         spokenText,
+        answerText,
       }),
     });
     if (!res.ok) throw new Error('Failed to submit answer');

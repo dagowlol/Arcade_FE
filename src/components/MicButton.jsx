@@ -13,26 +13,16 @@ export default function MicButton({ onSpeechResult, disabled = false, placeholde
     setTranscript('');
 
     try {
-      const result = await SpeechService.recognizeSpeech({
+      const recognizedText = await SpeechService.recognizeSpeech({
         onStart: () => setIsListening(true),
-        onRecognized: (text) => {
-          setIsListening(false);
-          setTranscript(text);
-          if (onSpeechResult) onSpeechResult(text);
-        },
-        onError: (err) => {
-          setIsListening(false);
-          console.warn('Speech error:', err);
-        },
+        onError: () => setIsListening(false),
       });
 
-      if (result && !transcript) {
-        setTranscript(result);
-        if (onSpeechResult) onSpeechResult(result);
-      }
+      if (!recognizedText) return;
+      setTranscript(recognizedText);
+      if (onSpeechResult) onSpeechResult(recognizedText);
     } catch (e) {
       console.error(e);
-      setIsListening(false);
     } finally {
       setIsListening(false);
     }

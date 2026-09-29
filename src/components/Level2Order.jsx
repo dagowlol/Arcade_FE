@@ -1,261 +1,365 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import confetti from 'canvas-confetti';
 import { SpeechService } from '../services/speechService';
 import { sounds } from '../services/soundEffects';
 import Mascot from './Mascot';
 
+const INTRO_SEQUENCE = [
+  { step: 'READY', text: 'SẴN SÀNG!', sub: 'Chuẩn bị vào trò chơi', sound: 'pop', duration: 800 },
+  { step: '3', text: '3', sub: 'Chuẩn bị vào trò chơi', sound: 'pop', duration: 550 },
+  { step: '2', text: '2', sub: 'Chuẩn bị vào trò chơi', sound: 'pop', duration: 550 },
+  { step: '1', text: '1', sub: 'Chuẩn bị vào trò chơi', sound: 'pop', duration: 550 },
+  { step: 'GO', text: 'CHƠI ĐI!', sub: 'Bé làm được nào!', sound: 'fanfare', duration: 800 },
+];
+
+const PROMPT_AUTOPLAY_DELAY_MS = 1200;
+
+const DIFFICULTY_LABEL = {
+  1: 'Dễ',
+  2: 'Trung bình',
+  3: 'Khó',
+};
+
+const MODE_BADGE = {
+  WORD_SCRAMBLE: { icon: '🔀', label: 'Xếp Từ Thành Câu' },
+  FILL_BLANK: { icon: '🕳️', label: 'Điền Từ Còn Thiếu' },
+  EXTRA_WORD: { icon: '🔍', label: 'Tìm Từ Thừa' },
+};
+
+const MODE_HINT = {
+  WORD_SCRAMBLE: 'Chạm từ theo thứ tự đúng. Chạm lại vào ô đã xếp để bỏ ra nhé!',
+  FILL_BLANK: 'Chọn một từ bên dưới để điền vào chỗ trống.',
+  EXTRA_WORD: 'Chạm vào từ KHÔNG thuộc câu để xóa nó đi nào!',
+};
+
 /**
- * Level 2 - Nghe & Gọi món (Listen & Order)
- * Child hears an order → selects the correct food(s) with quantities → speaks the food name(s) in English.
+ * Level 2 - 3 rotating grammar puzzles, randomised by the backend:
+ * 1. WORD_SCRAMBLE - rebuild a shuffled English sentence in the right word order
+ * 2. FILL_BLANK    - drop the right key word into the blank
+ * 3. EXTRA_WORD    - listen, then tap the intruder word to remove it
+ *
+ * Difficulty ramps up as the child advances through the session.
  */
-export default function Level2Order({ challenge, session, foods, onSubmit, loading }) {
-  const [tray, setTray] = useState({}); // { foodId: quantity }
+export default function Level2Order({ challenge, onSubmit, loading }) {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
-  const [phase, setPhase] = useState('LISTEN'); // LISTEN → SELECT → SPEAK
-  const [isListening, setIsListening] = useState(false);
-  const [spokenText, setSpokenText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [answerState, setAnswerState] = useState(null); // null | 'pending' | 'right' | 'wrong'
+  const [introVisible, setIntroVisible] = useState(true);
+  const [introStep, setIntroStep] = useState(INTRO_SEQUENCE[0].step);
 
-  // Auto-play prompt on mount
-  useEffect(() => {
-    setTray({});
-    setPhase('LISTEN');
-    setSpokenText('');
-    if (challenge?.promptAudioText) {
-      const timer = setTimeout(() => playPrompt(), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [challenge?.challengeId]);
+  // WORD_SCRAMBLE state
+  const [placedWords, setPlacedWords] = useState([]); // tokens in the answer slot
+  const [poolWords, setPoolWords] = useState([]); // tokens left in the bubble tray
 
-  const playPrompt = () => {
-    if (!challenge?.promptAudioText) return;
+  // FILL_BLANK / EXTRA_WORD state
+  const [chosenWord, setChosenWord] = useState(null); // word shown inside the blank
+  const [tappedWord, setTappedWord] = useState(null); // intruder the child tapped
+
+  const mode = MODE_BADGE[challenge?.type] ? challenge.type : 'WORD_SCRAMBLE';
+  const badge = MODE_BADGE[mode];
+  const difficulty = challenge?.difficulty ?? 1;
+  const isBusy = loading || submitting;
+  const isGraded = answerState === 'right' || answerState === 'wrong';
+  const isLocked = isBusy || isGraded || introVisible;
+
+  // FILL_BLANK: split into plain words + exactly one blank slot, punctuation kept outside the slot
+  const blankParts = useMemo(() => {
+    const words = (challenge?.blankSentence || '').trim().split(/\s+/).filter(Boolean);
+    const blankAt = words.findIndex((t) => t.startsWith('_'));
+    return {
+      words,
+      blankAt,
+      trailing: blankAt === -1 ? '' : words[blankAt].replace(/^_+/, ''),
+    };
+  }, [challenge?.blankSentence]);
+
+  const playPrompt = useCallback(() => {
+    const line = challenge?.promptAudioText;
+    if (!line) return;
     setIsAudioPlaying(true);
     SpeechService.speak(
-      challenge.promptAudioText,
+      line,
       () => setIsAudioPlaying(true),
       () => {
         setIsAudioPlaying(false);
         setHasPlayed(true);
-        setPhase('SELECT');
       }
     );
-  };
+  }, [challenge?.promptAudioText]);
 
-  const addToTray = (food) => {
-    sounds.playPop();
-    setTray(prev => ({
-      ...prev,
-      [food.id]: (prev[food.id] || 0) + 1,
-    }));
-  };
+  // Exciting "SẴN SÀNG -> 3 -> 2 -> 1 -> CHƠI ĐI!" countdown on entering the stage
+  useEffect(() => {
+    const timers = [];
+    let elapsed = 0;
 
-  const removeFromTray = (foodId) => {
-    sounds.playPop();
-    setTray(prev => {
-      const newTray = { ...prev };
-      if (newTray[foodId] > 1) {
-        newTray[foodId] -= 1;
-      } else {
-        delete newTray[foodId];
-      }
-      return newTray;
+    INTRO_SEQUENCE.forEach((beat) => {
+      timers.push(
+        setTimeout(() => {
+          setIntroStep(beat.step);
+          if (beat.sound === 'fanfare') {
+            sounds.playFanfare();
+            confetti({ particleCount: 90, spread: 70, origin: { y: 0.5 } });
+            SpeechService.speak("Let's go!");
+          } else {
+            sounds.playPop();
+          }
+        }, elapsed)
+      );
+      elapsed += beat.duration;
     });
-  };
 
-  const handleConfirmTray = () => {
-    sounds.playPop();
-    setPhase('SPEAK');
-  };
+    timers.push(setTimeout(() => setIntroVisible(false), elapsed));
 
-  const handleStartSpeech = async () => {
-    sounds.playPop();
-    setIsListening(true);
-    setSpokenText('');
+    return () => {
+      timers.forEach(clearTimeout);
+      SpeechService.stopSpeaking();
+    };
+  }, []);
 
-    try {
-      const result = await SpeechService.recognizeSpeech({
-        onStart: () => setIsListening(true),
-        onRecognized: (text) => {
-          setIsListening(false);
-          setSpokenText(text);
-          submitWithSpeech(text);
-        },
-        onError: () => {
-          setIsListening(false);
-          setSpokenText('');
-        },
-      });
+  // Reset local puzzle state whenever a new challenge arrives
+  useEffect(() => {
+    setAnswerState(null);
+    setChosenWord(null);
+    setTappedWord(null);
+    setPlacedWords([]);
+    setPoolWords(challenge?.scrambledWords || []);
+    setHasPlayed(false);
+  }, [challenge]);
 
-      if (result && !spokenText) {
-        setSpokenText(result);
-        submitWithSpeech(result);
+  // Auto-play the model sentence once the countdown is over
+  useEffect(() => {
+    if (introVisible) return;
+    const timer = setTimeout(() => playPrompt(), PROMPT_AUTOPLAY_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [challenge?.challengeId, introVisible]);
+
+  const submitAnswer = async (answerText) => {
+    if (isLocked) return;
+    setSubmitting(true);
+    setAnswerState('pending');
+    const result = await onSubmit([], '', answerText);
+    setSubmitting(false);
+
+    if (result?.correct) {
+      setAnswerState('right');
+      return;
+    }
+
+    setAnswerState('wrong');
+    // Let the child read the correction, then hand the puzzle back fresh
+    setTimeout(() => {
+      if (mode === 'WORD_SCRAMBLE') {
+        setPlacedWords([]);
+        setPoolWords(challenge?.scrambledWords || []);
       }
-    } catch (e) {
-      console.error(e);
-      setIsListening(false);
+      setChosenWord(null);
+      setTappedWord(null);
+      setAnswerState(null);
+    }, 1500);
+  };
+
+  // ---------------- WORD_SCRAMBLE ----------------
+  const placeWord = (word, fromPool) => {
+    if (isLocked) return;
+    sounds.playPop();
+
+    if (fromPool !== null) {
+      setPoolWords((prev) => prev.filter((_, i) => i !== fromPool));
+      setPlacedWords((prev) => [...prev, word]);
+    } else {
+      setPlacedWords((prev) => prev.filter((_, i) => i !== word));
+      setPoolWords((prev) => [...prev, word]);
     }
   };
 
-  const submitWithSpeech = (spoken) => {
-    const selectedItems = Object.entries(tray).map(([foodId, qty]) => {
-      const food = (challenge?.options || foods || []).find(f => f.id === Number(foodId));
-      return {
-        foodId: Number(foodId),
-        foodName: food?.name || '',
-        displayName: food?.displayName || '',
-        quantity: qty,
-      };
-    });
-
-    onSubmit(selectedItems, spoken);
+  const submitScramble = () => {
+    if (placedWords.length === 0 || isLocked) return;
+    submitAnswer(placedWords.join(' '));
   };
 
-  const options = challenge?.options || [];
-  const trayItems = Object.entries(tray);
-  const trayTotal = trayItems.reduce((sum, [, qty]) => sum + qty, 0);
+  // ---------------- FILL_BLANK ----------------
+  const chooseBlankWord = (word) => {
+    if (isLocked) return;
+    sounds.playPop();
+    setChosenWord(word);
+    submitAnswer(word);
+  };
 
-  // Calculate total price
-  const trayTotalPrice = trayItems.reduce((sum, [foodId, qty]) => {
-    const food = options.find(f => f.id === Number(foodId));
-    return sum + (food?.price || 0) * qty;
-  }, 0);
+  // ---------------- EXTRA_WORD ----------------
+  const tapSentenceWord = (word) => {
+    if (isLocked) return;
+    sounds.playPop();
+    setTappedWord(word);
+    submitAnswer(word);
+  };
+
+  const slotClass = ['blank-slot'];
+  if (answerState === 'pending') slotClass.push('is-pending');
+  if (answerState === 'right') slotClass.push('is-right');
+  if (answerState === 'wrong') slotClass.push('is-wrong');
 
   return (
-    <div className="game-level-container">
-      {/* Level Badge */}
-      <div className="level-badge level-badge-medium">
-        <span>🍔 Cấp độ 2 — Nghe & Gọi món</span>
+    <div className="game-level-container level2-grammar">
+      <div className="game-instruction">
+        <span className="instruction-emoji">{badge.icon}</span>
+        <span>{challenge?.instruction || badge.label}</span>
       </div>
 
-      {/* Listen Box */}
+      <div className="mode-badge-row">
+        <span className="mode-badge">
+          {badge.icon} {badge.label}
+        </span>
+        <span className={`mode-difficulty mode-difficulty-${difficulty}`}>
+          {DIFFICULTY_LABEL[difficulty] || 'Dễ'}
+        </span>
+      </div>
+
+      {/* Model sentence + audio hint */}
       <div
         className={`listen-prompt-box ${isAudioPlaying ? 'playing' : ''}`}
-        onClick={playPrompt}
+        onClick={() => playPrompt()}
       >
         <span className="listen-icon">{isAudioPlaying ? '🔊' : '🔈'}</span>
         <div className="listen-prompt-text">
           {isAudioPlaying
-            ? 'Đang nghe...'
+            ? 'Đang nghe câu mẫu...'
             : hasPlayed
-              ? 'Bấm để nghe lại'
-              : 'Bấm để nghe yêu cầu'}
+              ? 'Bấm để nghe lại 🔄'
+              : 'Bấm để nghe câu mẫu'}
         </div>
       </div>
 
-      {/* Phase Indicator */}
-      <div className="phase-indicator">
-        <span className={`phase-dot ${phase === 'LISTEN' ? 'active' : phase !== 'LISTEN' ? 'done' : ''}`}>1. Nghe</span>
-        <span className="phase-arrow">→</span>
-        <span className={`phase-dot ${phase === 'SELECT' ? 'active' : phase === 'SPEAK' ? 'done' : ''}`}>2. Chọn</span>
-        <span className="phase-arrow">→</span>
-        <span className={`phase-dot ${phase === 'SPEAK' ? 'active' : ''}`}>3. Nói</span>
-      </div>
-
-      {/* SELECT Phase: Food Menu */}
-      {(phase === 'SELECT' || phase === 'LISTEN') && (
+      {/* ---------------- WORD SCRAMBLE ---------------- */}
+      {mode === 'WORD_SCRAMBLE' && (
         <>
-          <div className="game-instruction">
-            <span className="instruction-emoji">🍽️</span>
-            <span>{phase === 'LISTEN' ? 'Nghe yêu cầu trước nhé!' : 'Chọn đúng món và số lượng!'}</span>
+          <div className="scramble-answer-slot">
+            {placedWords.length === 0 ? (
+              <span className="scramble-placeholder">Chạm các từ bên dưới theo thứ tự…</span>
+            ) : (
+              placedWords.map((text, i) => (
+                <button
+                  key={`placed-${i}-${text}`}
+                  type="button"
+                  className="scramble-word is-placed"
+                  onClick={() => placeWord(text, null)}
+                  disabled={isLocked}
+                >
+                  {text}
+                </button>
+              ))
+            )}
           </div>
 
-          <div className="food-menu-grid">
-            {options.map((food) => (
+          <div className="scramble-pool">
+            {poolWords.map((text, i) => (
               <button
-                key={food.id}
+                key={`pool-${i}-${text}`}
                 type="button"
-                className={`food-menu-item ${tray[food.id] ? 'in-tray' : ''}`}
-                onClick={() => addToTray(food)}
-                disabled={phase === 'LISTEN' || loading}
+                className="scramble-word"
+                onClick={() => placeWord(text, i)}
+                disabled={isLocked}
               >
-                <span className="menu-item-emoji">{food.image}</span>
-                <span className="menu-item-name">{food.displayName}</span>
-                <span className="menu-item-price">{food.price?.toLocaleString('vi-VN')}đ</span>
-                {tray[food.id] && (
-                  <span className="tray-count-badge">×{tray[food.id]}</span>
-                )}
+                {text}
               </button>
             ))}
           </div>
 
-          {/* Order Tray */}
-          {trayTotal > 0 && (
-            <div className="order-tray">
-              <div className="tray-header">
-                <span>🛒 Khay đặt hàng ({trayTotal} món)</span>
-                <span className="tray-total-price">{trayTotalPrice.toLocaleString('vi-VN')}đ</span>
-              </div>
-              <div className="tray-items-row">
-                {trayItems.map(([foodId, qty]) => {
-                  const food = options.find(f => f.id === Number(foodId));
-                  return (
-                    <div key={foodId} className="tray-item-chip">
-                      <span>{food?.image} {food?.displayName} ×{qty}</span>
-                      <button
-                        type="button"
-                        className="tray-remove-btn"
-                        onClick={(e) => { e.stopPropagation(); removeFromTray(Number(foodId)); }}
-                      >✕</button>
-                    </div>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                className="btn-confirm-tray"
-                onClick={handleConfirmTray}
-                disabled={loading}
-              >
-                ✅ Xác nhận đơn hàng
-              </button>
-            </div>
-          )}
+          <button
+            type="button"
+            className="btn-arcade-huge btn-submit-answer"
+            onClick={submitScramble}
+            disabled={placedWords.length === 0 || isLocked}
+          >
+            <span>🚀 NỘP CÂU TRẢ LỜI</span>
+          </button>
         </>
       )}
 
-      {/* SPEAK Phase */}
-      {phase === 'SPEAK' && (
-        <div className="speak-phase-container">
-          <div className="game-instruction">
-            <span className="instruction-emoji">🎤</span>
-            <span>Bây giờ hãy nói tên món bằng tiếng Anh nhé!</span>
+      {/* ---------------- FILL IN THE BLANK ---------------- */}
+      {mode === 'FILL_BLANK' && (
+        <>
+          <div className="blank-sentence-box">
+            {blankParts.words.map((token, i) =>
+              i === blankParts.blankAt ? (
+                <React.Fragment key={`blank-${i}`}>
+                  <span className={slotClass.join(' ')}>{chosenWord || '?'}</span>
+                  {blankParts.trailing && <span className="blank-word">{blankParts.trailing}</span>}
+                </React.Fragment>
+              ) : (
+                <span key={`word-${i}`} className="blank-word">
+                  {token}
+                </span>
+              )
+            )}
           </div>
 
-          {/* Show target sentence hint */}
-          <div className="speech-hint-box" onClick={playPrompt}>
-            <span className="hint-label">💡 Gợi ý câu nói:</span>
-            <p className="hint-sentence">"{challenge?.speechTarget}"</p>
-            <span className="hint-listen">🔊 Bấm để nghe lại</span>
+          <div className="blank-options-row">
+            {(challenge?.blankOptions || []).map((option, i) => (
+              <button
+                key={`${option}-${i}`}
+                type="button"
+                className={`blank-option ${chosenWord === option ? 'is-chosen' : ''}`}
+                onClick={() => chooseBlankWord(option)}
+                disabled={isLocked}
+              >
+                {option}
+              </button>
+            ))}
           </div>
+        </>
+      )}
 
-          <button
-            type="button"
-            className={`btn-arcade-mic ${isListening ? 'listening' : ''}`}
-            onClick={handleStartSpeech}
-            disabled={loading || isListening}
-          >
-            <span className="mic-icon">{isListening ? '🎙️' : '🎤'}</span>
-            <span>{isListening ? 'Đang nghe... Nói đi nào!' : 'Bấm để nói'}</span>
-          </button>
-
-          {spokenText && (
-            <div className="transcript-pill">Bạn đã nói: "{spokenText}"</div>
-          )}
+      {/* ---------------- EXTRA WORD ---------------- */}
+      {mode === 'EXTRA_WORD' && (
+        <div className="extra-word-chain">
+          {(challenge?.sentenceWords || []).map((word, i) => {
+            const tapped = tappedWord === word;
+            const cls = ['extra-word'];
+            if (tapped) cls.push('is-removed');
+            if (tapped && answerState === 'right') cls.push('is-right');
+            if (tapped && answerState === 'wrong') cls.push('is-wrong');
+            return (
+              <button
+                key={`${word}-${i}`}
+                type="button"
+                className={cls.join(' ')}
+                onClick={() => tapSentenceWord(word)}
+                disabled={isLocked}
+              >
+                {word}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* Mascot */}
       <div className="game-mascot-row">
         <Mascot
-          mood={phase === 'SPEAK' ? 'excited' : 'happy'}
+          mood={answerState === 'right' ? 'excited' : 'happy'}
           message={
-            phase === 'LISTEN'
-              ? 'Nghe kỹ yêu cầu nhé! 👂'
-              : phase === 'SELECT'
-                ? 'Chọn đúng món và số lượng!'
-                : 'Nói thật rõ bằng tiếng Anh nào! 🗣️'
+            answerState === 'right'
+              ? 'Giỏi lắm! Câu của bạn chính xác rồi! 🎉'
+              : submitting
+                ? 'Đang kiểm tra câu trả lời...'
+                : `${badge.label} — ${MODE_HINT[mode]}`
           }
         />
       </div>
+
+      {/* Countdown overlay: SẴN SÀNG -> 3 -> 2 -> 1 -> CHƠI ĐI! */}
+      {introVisible && (
+        <div className="intro-overlay">
+          <div className={`intro-burst ${introStep === 'GO' ? 'is-go' : ''}`} key={introStep}>
+            <span className="intro-burst-main">
+              {INTRO_SEQUENCE.find((b) => b.step === introStep)?.text}
+            </span>
+            <span className="intro-burst-sub">
+              {INTRO_SEQUENCE.find((b) => b.step === introStep)?.sub}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
